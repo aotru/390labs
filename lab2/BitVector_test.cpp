@@ -1,5 +1,6 @@
-#include <iostream>
 #include "BitVector.hpp"
+
+#include <iostream>
 
 using namespace std;
 
