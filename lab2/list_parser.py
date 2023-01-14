@@ -68,11 +68,16 @@ def parse_elements_opt(stream):
 def parse_elements(stream):
     """Parse comma-separated elements from a stream."""
     elements = [parse_element(stream)]
+    return parse_elements_tail(stream, elements)
+
+
+def parse_elements_tail(stream, read_so_far):
+    """Parse the tail of a comma-separated list of elements."""
     next_char = stream.peek_char()
     if next_char == ',':
         stream.read_char()
-        elements.extend(parse_elements(stream))
-    return elements
+        return parse_elements_tail(stream, read_so_far + [parse_element(stream)])
+    return read_so_far
 
 
 def parse_element(stream):
@@ -80,22 +85,24 @@ def parse_element(stream):
     first_char = stream.peek_char()
     if first_char == '[':
         return parse_list(stream)
-    return parse_integer(stream)
+    if first_char.isdigit():
+        return parse_integer(stream)
+    raise SyntaxError(f"expected digit or [, got: '{first_char}'")
 
 
-def parse_integer(stream: Stream):
+def parse_integer(stream):
     """Parse an integer from a stream."""
-    digits = []
-    read_digits(stream, digits)
-    return int(''.join(digits))
+    first_char = stream.read_char()
+    return parse_integer_tail(stream, first_char)
 
 
-def read_digits(stream, digits):
-    digit = stream.peek_char()
-    if digit.isdigit():
+def parse_integer_tail(stream, read_so_far):
+    """Parse the tail of an integer."""
+    next_char = stream.peek_char()
+    if next_char.isdigit():
         stream.read_char()
-        digits.append(digit)
-        read_digits(stream, digits)
+        return parse_integer_tail(stream, read_so_far + next_char)
+    return int(read_so_far)
 
 
 if __name__ == '__main__':
